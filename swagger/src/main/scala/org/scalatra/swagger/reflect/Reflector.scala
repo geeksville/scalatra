@@ -88,16 +88,22 @@ object Reflector {
             val f = ls.next()
             val mod = f.getModifiers
             if (!(Modifier.isStatic(mod) || Modifier.isTransient(mod) || Modifier.isVolatile(mod) || f.isSynthetic)) {
-              val st = ManifestScalaType(f.getType, f.getGenericType match {
-                case p: ParameterizedType => p.getActualTypeArguments.toSeq.zipWithIndex map { case (cc, i) =>
-                  if (cc == classOf[java.lang.Object]) Reflector.scalaTypeOf(ScalaSigReader.readField(f.getName, clazz, i))
-                  else Reflector.scalaTypeOf(cc)
-                }
-                case _ => Nil
-              })
-              val decoded = unmangleName(f.getName)
-              f.setAccessible(true)
-              lb += PropertyDescriptor(decoded, f.getName, st, f)
+              try {
+                val st = ManifestScalaType(f.getType, f.getGenericType match {
+                  case p: ParameterizedType => p.getActualTypeArguments.toSeq.zipWithIndex map { case (cc, i) =>
+                    if (cc == classOf[java.lang.Object]) Reflector.scalaTypeOf(ScalaSigReader.readField(f.getName, clazz, i))
+                    else Reflector.scalaTypeOf(cc)
+                  }
+                  case _ => Nil
+                })
+                val decoded = unmangleName(f.getName)
+                f.setAccessible(true)
+                lb += PropertyDescriptor(decoded, f.getName, st, f)
+              }
+              catch {
+                case ex: Exception =>
+                  println(s"Ignoring field $f due to errors...")
+              }
             }
           }
           if (clazz.getSuperclass != null) lb ++= fields(clazz.getSuperclass)
@@ -136,24 +142,31 @@ object Reflector {
       }
 
       def constructors: Seq[ConstructorDescriptor] = {
-        tpe.erasure.getConstructors.toSeq map {
+        tpe.erasure.getConstructors.toSeq flatMap {
           ctor =>
-            val ctorParameterNames = if (Modifier.isPublic(ctor.getModifiers) && ctor.getParameterTypes.length > 0)
-              allCatch opt { paramNameReader.lookupParameterNames(ctor) } getOrElse Nil
-            else
-              Nil
-            val genParams = Vector(ctor.getGenericParameterTypes: _*)
-            val ctorParams = ctorParameterNames.zipWithIndex map {
-              case (paramName, index) =>
-                val decoded = unmangleName(paramName)
-                val default = companion flatMap {
-                  comp =>
-                    defaultValue(comp.erasure.erasure, comp.instance, index)
-                }
-                val theType = ctorParamType(paramName, index, tpe, ctorParameterNames.toList, genParams(index))
-                ConstructorParamDescriptor(decoded, paramName, index, theType, default)
+            try {
+              val ctorParameterNames = if (Modifier.isPublic(ctor.getModifiers) && ctor.getParameterTypes.length > 0)
+                allCatch opt { paramNameReader.lookupParameterNames(ctor) } getOrElse Nil
+              else
+                Nil
+              val genParams = Vector(ctor.getGenericParameterTypes: _*)
+              val ctorParams = ctorParameterNames.zipWithIndex map {
+                case (paramName, index) =>
+                  val decoded = unmangleName(paramName)
+                  val default = companion flatMap {
+                    comp =>
+                      defaultValue(comp.erasure.erasure, comp.instance, index)
+                  }
+                  val theType = ctorParamType(paramName, index, tpe, ctorParameterNames.toList, genParams(index))
+                  ConstructorParamDescriptor(decoded, paramName, index, theType, default)
+              }
+              Some(ConstructorDescriptor(ctorParams.toSeq, ctor, isPrimary = false))
             }
-            ConstructorDescriptor(ctorParams.toSeq, ctor, isPrimary = false)
+            catch {
+              case ex: Exception =>
+                println(s"WARNING: Skipping constructor $ctor")
+                None
+            }
         }
       }
 

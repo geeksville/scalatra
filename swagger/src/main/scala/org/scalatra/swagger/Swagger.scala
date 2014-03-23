@@ -49,9 +49,15 @@ object Swagger {
   private[swagger] def collectModels(tpe: ScalaType, alreadyKnown: Set[Model], known: Set[ScalaType] = Set.empty): Set[Model] = {
     if (tpe.isMap) collectModels(tpe.typeArgs.head, alreadyKnown, tpe.typeArgs.toSet) ++ collectModels(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
     else if (tpe.isCollection || tpe.isOption) {
-      val ntpe = tpe.typeArgs.head
-      if (! known.contains(ntpe)) collectModels(ntpe, alreadyKnown, known + ntpe)
-      else Set.empty
+      if(tpe.typeArgs.isEmpty) {
+        println(s"WARNING: Skipping models for $tpe")
+        Set.empty
+      }
+      else {
+        val ntpe = tpe.typeArgs.head
+        if (! known.contains(ntpe)) collectModels(ntpe, alreadyKnown, known + ntpe)
+        else Set.empty
+      }
     }
     else {
       if (alreadyKnown.map(_.id).contains(tpe.simpleName)) Set.empty

@@ -106,6 +106,9 @@ private[reflect] object ScalaSigReader {
   private def findArgTypeForField(s: MethodSymbol, typeArgIdx: Int): Class[_] = {
     val t = s.infoType match {
       case NullaryMethodType(TypeRefType(_, _, args)) => args(typeArgIdx)
+      case TypeRefType(_, _, args) => 
+        args(typeArgIdx)
+        // throw new Exception(s"Unknown info type for $s, type is ${s.infoType}")
     }
 
     def findPrimitive(t: Type): Symbol = t match {
@@ -130,7 +133,12 @@ private[reflect] object ScalaSigReader {
   private[this] def isPrimitive(s: Symbol) = toClass(s) != classOf[AnyRef]
 
   def findScalaSig(clazz: Class[_]): Option[ScalaSig] =
-    parseClassFileFromByteCode(clazz).orElse(findScalaSig(clazz.getDeclaringClass))
+    parseClassFileFromByteCode(clazz).orElse {
+      if(clazz.getDeclaringClass == null)
+        None
+      else
+        findScalaSig(clazz.getDeclaringClass)
+    }
 
   private[this] def parseClassFileFromByteCode(clazz: Class[_]): Option[ScalaSig] = try {
     // taken from ScalaSigParser parse method with the explicit purpose of walking away from NPE
