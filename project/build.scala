@@ -336,7 +336,7 @@ object ScalatraBuild extends Build {
       Map(alternatives: _*).withDefaultValue(default)
 
     private val akkaVersion: String => String =
-      defaultOrMapped("2.2.3", "2.9.3" -> "2.0.5", "2.9.2" -> "2.0.5", "2.9.1" -> "2.0.2")
+      defaultOrMapped("2.3.0", "2.9.3" -> "2.0.5", "2.9.2" -> "2.0.5", "2.9.1" -> "2.0.2")
 
     private val grizzledSlf4jVersion: String => String = {
       case sv if sv startsWith "2.9."   => "0.6.10"
