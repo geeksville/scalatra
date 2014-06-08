@@ -281,7 +281,7 @@ object ScalatraBuild extends Build {
     lazy val akkaTestkit: MM       = sv => "com.typesafe.akka"       %%  "akka-testkit"       % akkaVersion(sv)
     lazy val atmosphereRuntime          =  "org.atmosphere"          % "atmosphere-runtime"  % atmosphereVersion
     lazy val atmosphereJQuery           =  "org.atmosphere.client"   % "jquery"              % "2.1.4" artifacts(Artifact("jquery", "war", "war"))
-    lazy val atmosphereClient           =  "org.atmosphere"          % "wasync"              % "1.3.0"
+    lazy val atmosphereClient           =  "org.atmosphere"          % "wasync"              % "1.3.2"
     lazy val atmosphereRedis            =  "org.atmosphere"          % "atmosphere-redis"    % "2.1.0"
     lazy val atmosphereCompatJbossweb   =  "org.atmosphere"          % "atmosphere-compat-jbossweb" % atmosphereCompatVersion
     lazy val atmosphereCompatTomcat     =  "org.atmosphere"          % "atmosphere-compat-tomcat"   % atmosphereCompatVersion
@@ -336,14 +336,14 @@ object ScalatraBuild extends Build {
       Map(alternatives: _*).withDefaultValue(default)
 
     private val akkaVersion: String => String =
-      defaultOrMapped("2.3.0", "2.9.3" -> "2.0.5", "2.9.2" -> "2.0.5", "2.9.1" -> "2.0.2")
+      defaultOrMapped("2.4-SNAPSHOT", "2.9.3" -> "2.0.5", "2.9.2" -> "2.0.5", "2.9.1" -> "2.0.2")
 
     private val grizzledSlf4jVersion: String => String = {
       case sv if sv startsWith "2.9."   => "0.6.10"
       case _                            => "1.0.1"
     }
 
-    private val atmosphereVersion = "2.1.2"
+    private val atmosphereVersion = "2.1.5"
 
     private val atmosphereCompatVersion = "2.0.1"
 
