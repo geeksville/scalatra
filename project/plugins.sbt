@@ -1,10 +1,5 @@
 scalacOptions ++= Seq("-unchecked", "-deprecation")
 
-resolvers ++= Seq(
-  "less is" at "http://repo.lessis.me",
-  "coda" at "http://repo.codahale.com"
-)
-
 addSbtPlugin("org.scalatra.sbt" % "scalatra-sbt" % "0.3.4")
 
 addSbtPlugin("me.lessis" % "ls-sbt" % "0.1.3")
